@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CircuitToolAnalyzer.Api/CircuitToolAnalyzer.Api.csproj" />
+    <Project Path="src/CircuitToolAnalyzer.Application/CircuitToolAnalyzer.Application.csproj" />
+    <Project Path="src/CircuitToolAnalyzer.Domain/CircuitToolAnalyzer.Domain.csproj" />
+    <Project Path="src/CircuitToolAnalyzer.Infrastructure/CircuitToolAnalyzer.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CircuitToolAnalyzer.IntegrationTests/CircuitToolAnalyzer.IntegrationTests.csproj" />
+    <Project Path="tests/CircuitToolAnalyzer.UnitTests/CircuitToolAnalyzer.UnitTests.csproj" />
+  </Folder>
+</Solution>
