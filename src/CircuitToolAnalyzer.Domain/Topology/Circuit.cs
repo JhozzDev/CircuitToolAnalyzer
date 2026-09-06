@@ -11,6 +11,9 @@ namespace CircuitToolAnalyzer.Domain.Topology
         public string Name { get; }
 
         private readonly List<Node> _nodes;
+        private readonly List<Connection> _connections;
+
+        public IReadOnlyCollection<Connection> Connections => _connections.AsReadOnly();
 
         public IReadOnlyCollection<Node> Nodes => _nodes.AsReadOnly();
 
@@ -23,6 +26,7 @@ namespace CircuitToolAnalyzer.Domain.Topology
             Id = Guid.NewGuid();
             Name = name;
             _nodes = new List<Node>();
+            _connections = new List<Connection>();
         }
         public Node GetGroundNode()
         {
@@ -53,6 +57,23 @@ namespace CircuitToolAnalyzer.Domain.Topology
 
             _nodes.Add(node);
         }
-       
+
+        public void AddConnection(Connection connection)
+        {
+            if (connection == null)
+            {
+                throw new ArgumentNullException(nameof(connection));
+            }
+            else if (!_nodes.Exists(n => n.Id == connection.NodeA.Id))
+            {
+                throw new InvalidOperationException($"El nodo de origen con Id {connection.NodeA.Id} no existe en el circuito.");
+            }
+            else if (!_nodes.Exists(n => n.Id == connection.NodeB.Id))
+            {
+                throw new InvalidOperationException($"El nodo de destino con Id {connection.NodeB.Id} no existe en el circuito.");
+            }
+           
+            _connections.Add(connection);
+        }
     }
 }
