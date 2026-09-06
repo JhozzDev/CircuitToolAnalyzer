@@ -1,1 +1,1 @@
-# CircuitToolAnalyzer_C#
+# Circuit Tool Analyzer
