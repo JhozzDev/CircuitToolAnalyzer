@@ -1,13 +1,19 @@
 # Circuit Tool Analyzer
 
-WebSite interactivo para **Creacion** y **Analisis** de circuitos electricos.
+WebSite interactivo para **creacion** y **analisis** de circuitos electricos.
 
 ## Tecnologias.
 
-*C#
-*xUnit
-*.NET / ASP.NET Core
-*ASP.NET Core Web API (Pendiente)
-*Entity FrameWork Core(Pendiente)
-*Sql Server (Pendiente)
-*Git
+C#
+
+xUnit
+
+.NET / ASP.NET Core
+
+ASP.NET Core Web API (Pendiente)
+
+Entity FrameWork Core(Pendiente)
+
+Sql Server (Pendiente)
+
+Git
