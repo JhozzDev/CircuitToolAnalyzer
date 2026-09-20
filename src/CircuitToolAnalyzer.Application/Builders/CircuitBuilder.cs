@@ -21,7 +21,19 @@ namespace CircuitToolAnalyzer.Application.Builders
 
             foreach (var connectionDto in dto.Connections)
             {
-                if(connectionDto.ComponentType is ComponentType.Resistor)
+                
+                 if (!nodesByName.ContainsKey(connectionDto.NodeAName))
+                    {
+                        throw new ArgumentException($"El nodo '{connectionDto.NodeAName}' no existe en la lista de nodos.");
+                    }
+
+                if (!nodesByName.ContainsKey(connectionDto.NodeBName))
+                    {
+                        throw new ArgumentException($"El nodo '{connectionDto.NodeBName}' no existe en la lista de nodos.");
+                    }
+
+                   
+                if (connectionDto.ComponentType is ComponentType.Resistor)
                 {
                     var nodeA = nodesByName[connectionDto.NodeAName];
                     var nodeB = nodesByName[connectionDto.NodeBName];
