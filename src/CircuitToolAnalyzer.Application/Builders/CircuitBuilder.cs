@@ -22,7 +22,7 @@ namespace CircuitToolAnalyzer.Application.Builders
             foreach (var connectionDto in dto.Connections)
             {
                 
-                 if (!nodesByName.ContainsKey(connectionDto.NodeAName))
+                  if (!nodesByName.ContainsKey(connectionDto.NodeAName))
                     {
                         throw new ArgumentException($"El nodo '{connectionDto.NodeAName}' no existe en la lista de nodos.");
                     }

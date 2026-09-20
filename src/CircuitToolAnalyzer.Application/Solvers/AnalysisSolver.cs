@@ -33,15 +33,10 @@ namespace CircuitToolAnalyzer.Application.Solvers
         {
             var nodeGND = circuit.GetGroundNode();
 
-            var nodoNoGND = circuit.Nodes
-                .First(n => n != nodeGND);
-
+         
             var voltages = new Dictionary<Guid, double>();
-            voltages[nodeGND.Id] = 0.0;   
-
-            var conexionesDelNodo = circuit.Connections.Where(c => c.NodeA == nodoNoGND || c.NodeB == nodoNoGND);
-
-
+            voltages[nodeGND.Id] = 0.0;        
+            
             foreach (var conexion in circuit.Connections)
             {
                 if (conexion.Component is VoltageSource voltageSource)
@@ -50,7 +45,13 @@ namespace CircuitToolAnalyzer.Application.Solvers
                     voltages[nodoFuente.Id] = voltageSource.VoltageVolts;
                 }
             }
-        
+            var nodoNoGND = circuit.Nodes.First(n => n != nodeGND && !voltages.ContainsKey(n.Id));
+
+            var conexionesDelNodo = circuit.Connections.Where(c => c.NodeA == nodoNoGND || c.NodeB == nodoNoGND);
+
+
+       
+          
 
             double sumaConductancias = 0.0;
             double sumaCorrientesConocidas = 0.0;
