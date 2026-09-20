@@ -1,0 +1,11 @@
+{
+  "name": "Circuito de prueba",
+  "nodes": [
+    { "name": "V1", "isGround": false },
+    { "name": "GND", "isGround": true }
+  ],
+  "connections": [
+    { "componentName": "Fuente1", "componentType": "VoltageSource", "value": 20, "nodeAName": "V1", "nodeBName": "GND" },
+    { "componentName": "R1", "componentType": "Resistor", "value": 10, "nodeAName": "V1", "nodeBName": "GND" }
+  ]
+}
