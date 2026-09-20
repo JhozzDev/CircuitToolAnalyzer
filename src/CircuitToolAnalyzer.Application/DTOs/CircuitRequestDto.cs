@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-
-namespace CircuitToolAnalyzer.Api.DTOs
+namespace CircuitToolAnalyzer.Application.DTOs
 {
     public class CircuitRequestDto
     {

@@ -1,4 +1,4 @@
-﻿namespace CircuitToolAnalyzer.Api.DTOs
+﻿namespace CircuitToolAnalyzer.Application.DTOs
 {
     public class NodeDto
     {

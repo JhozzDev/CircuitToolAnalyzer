@@ -1,6 +1,6 @@
 ﻿
 
-namespace CircuitToolAnalyzer.Api.DTOs
+namespace CircuitToolAnalyzer.Application.DTOs
 {
     public enum ComponentType
     {
