@@ -4,6 +4,7 @@ using CircuitToolAnalyzer.Infrastructure.Entities;
 using System.Text.Json; 
 using System.Linq;
 using CircuitToolAnalyzer.Application.Persistance;
+using CircuitToolAnalyzer.Application.DTOs;
 
 namespace CircuitToolAnalyzer.Infrastructure
 {
@@ -15,7 +16,8 @@ namespace CircuitToolAnalyzer.Infrastructure
             _context = context;
         }
 
-        public Guid Save(Circuit circuit, AnalysisResult result)
+        public Guid Save(CircuitRequestDto circuit
+            , AnalysisResult result)
         {
 
             var circuit2 = new SavedCircuit{
@@ -54,7 +56,7 @@ namespace CircuitToolAnalyzer.Infrastructure
 
             return new SavedCircuitData
             {
-                Circuit = JsonSerializer.Deserialize<Circuit>(savedCircuit.CircuitJson),
+                Circuit = JsonSerializer.Deserialize<CircuitRequestDto>(savedCircuit.CircuitJson),
                 Result = JsonSerializer.Deserialize<AnalysisResult>(savedCircuit.ResultJson)
             };
         }

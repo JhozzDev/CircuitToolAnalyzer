@@ -33,7 +33,7 @@ public class CircuitAnalysisController : ControllerBase
     {
         var circuit = _builder.Build(dto);
         var result = _solver.Solve(circuit);
-        var savedId = _savedRepository.Save(circuit, result);
+        var savedId = _savedRepository.Save(dto, result);
 
         return Ok(result);
     }

@@ -17,7 +17,7 @@ namespace CircuitToolAnalyzer.Domain.Analysis
         public AnalysisType Type { get; }
 
 
-        public AnalysisResult(AnalysisType type, Dictionary<Guid, double> nodeVoltages)
+        public AnalysisResult(AnalysisType type, IReadOnlyDictionary<Guid, double> nodeVoltages)
         {
             Id = Guid.NewGuid();
             Type = type;
@@ -25,7 +25,7 @@ namespace CircuitToolAnalyzer.Domain.Analysis
             {
                 throw new ArgumentNullException(nameof(nodeVoltages), "Node voltages dictionary cannot be null.");
             }
-            _nodeVoltages = nodeVoltages;
+            _nodeVoltages = new Dictionary<Guid, double>(nodeVoltages);
         }
     }
 }
