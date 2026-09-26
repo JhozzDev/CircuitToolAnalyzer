@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CircuitToolAnalyzer.Domain.Topology;
 using CircuitToolAnalyzer.Infrastructure.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CircuitToolAnalyzer.Infrastructure
 {
@@ -7,6 +8,7 @@ namespace CircuitToolAnalyzer.Infrastructure
     {
         public Context(DbContextOptions<Context> options) : base(options)
         {
+            
         }
 
         public DbSet<SavedCircuit> SavedCircuits { get; set; }

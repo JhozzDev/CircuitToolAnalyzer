@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CircuitToolAnalyzer.Domain\CircuitToolAnalyzer.Domain.csproj" />
+    <ProjectReference Include="..\CircuitToolAnalyzer.Application\CircuitToolAnalyzer.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
