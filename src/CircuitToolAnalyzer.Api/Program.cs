@@ -1,13 +1,16 @@
 using CircuitToolAnalyzer.Application.Builders;
+using CircuitToolAnalyzer.Application.Persistance;
 using CircuitToolAnalyzer.Application.Solvers;
-using Microsoft.EntityFrameworkCore;
 using CircuitToolAnalyzer.Infrastructure;
+using CircuitToolAnalyzer.Infrastructure;
+using CircuitToolAnalyzer.Application.Persistance;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddScoped<ICircuitSaved, SavedRepository>();
 builder.Services.AddDbContext<Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddEndpointsApiExplorer();
