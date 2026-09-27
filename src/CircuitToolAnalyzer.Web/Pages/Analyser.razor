@@ -1,0 +1,40 @@
+﻿@using CircuitToolAnalyzer.Application.DTOs
+@using System.Net.Http.Json
+@page "/analyser"
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Analyser</h3>
+
+@code {
+    double voltage = 0.0;
+    double r1 = 0.0;
+    double r2 = 0.0;
+   
+    private async Task CalculateCurrent()
+    {
+        var dto = new CircuitRequestDto
+        {
+            Name = "Circuito desde Web",
+            Nodes = new List<NodeDto>
+    {
+        new NodeDto { Name = "V0", IsGround = false },
+        new NodeDto { Name = "V1", IsGround = false },
+        new NodeDto { Name = "GND", IsGround = true }
+    },
+            Connections = new List<ConnectionDto>
+    {
+        new ConnectionDto { ComponentName = "Fuente1", ComponentType = ComponentType.VoltageSource, Value = voltage, NodeAName = "V0", NodeBName = "GND" },
+        new ConnectionDto { ComponentName = "R1", ComponentType = ComponentType.Resistor, Value = r1, NodeAName = "V0", NodeBName = "V1" },
+        new ConnectionDto { ComponentName = "R2", ComponentType = ComponentType.Resistor, Value = r2, NodeAName = "V1", NodeBName = "GND" }
+    }
+        };
+        var client = HttpClientFactory.CreateClient("CircuitApi");
+        var response = await client.PostAsJsonAsync("api/CircuitAnalysis", dto);
+    }
+}
+
+<input type="number" @bind="voltage" placeholder="Voltage (V)" />
+<input type="number" @bind="r1" placeholder="Resistance R1 (Ω)" />
+<input type="number" @bind="r2" placeholder="Resistance R2 (Ω)" />
+
+<button @onclick="CalculateCurrent">Calculate Current</button>
