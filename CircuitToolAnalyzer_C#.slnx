@@ -4,6 +4,7 @@
     <Project Path="src/CircuitToolAnalyzer.Application/CircuitToolAnalyzer.Application.csproj" />
     <Project Path="src/CircuitToolAnalyzer.Domain/CircuitToolAnalyzer.Domain.csproj" />
     <Project Path="src/CircuitToolAnalyzer.Infrastructure/CircuitToolAnalyzer.Infrastructure.csproj" />
+    <Project Path="src/CircuitToolAnalyzer.Web/CircuitToolAnalyzer.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CircuitToolAnalyzer.IntegrationTests/CircuitToolAnalyzer.IntegrationTests.csproj" />
