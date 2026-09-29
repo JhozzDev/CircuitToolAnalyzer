@@ -27,7 +27,8 @@
             Nodes = new List<NodeDto>
     {
         new NodeDto { Name = "V0", IsGround = false },
-        new NodeDto { Name = "GND", IsGround = true }
+        new NodeDto { Name = "GND", IsGround = true },
+        new NodeDto { Name = "V1", IsGround = false }
     },
             Connections = new List<ConnectionDto>
     {
@@ -53,7 +54,7 @@
 <input type="number" @bind="r1" placeholder="Resistance R1 (Ω)" />
 <input type="number" @bind="r2" placeholder="Resistance R2 (Ω)" />
 
-<button @onclick="Works">Calculate Current</button>
+<button @onclick="CalculateCurrent">Calculate Current</button>
 
 @if (result != null)
 {
