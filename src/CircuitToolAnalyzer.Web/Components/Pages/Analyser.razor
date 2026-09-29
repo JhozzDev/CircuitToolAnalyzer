@@ -2,6 +2,7 @@
 @using System.Net.Http.Json
 @using CircuitToolAnalyzer.Web.Models
 @page "/analyser"
+@rendermode InteractiveServer
 @inject IHttpClientFactory HttpClientFactory
 
 <h3>Analyser</h3>
@@ -12,7 +13,11 @@
     double r2 = 0.0;
     AnalysisResultResponse? result = null;
 
-   
+    private async Task Works()
+    {
+        Console.WriteLine("2");
+    }
+
     private async Task CalculateCurrent()
     {
         Console.WriteLine("Botón presionado");
@@ -48,7 +53,7 @@
 <input type="number" @bind="r1" placeholder="Resistance R1 (Ω)" />
 <input type="number" @bind="r2" placeholder="Resistance R2 (Ω)" />
 
-<button @onclick="CalculateCurrent">Calculate Current</button>
+<button @onclick="Works">Calculate Current</button>
 
 @if (result != null)
 {
