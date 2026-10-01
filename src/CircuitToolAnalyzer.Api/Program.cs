@@ -2,8 +2,6 @@ using CircuitToolAnalyzer.Application.Builders;
 using CircuitToolAnalyzer.Application.Persistance;
 using CircuitToolAnalyzer.Application.Solvers;
 using CircuitToolAnalyzer.Infrastructure;
-using CircuitToolAnalyzer.Infrastructure;
-using CircuitToolAnalyzer.Application.Persistance;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
