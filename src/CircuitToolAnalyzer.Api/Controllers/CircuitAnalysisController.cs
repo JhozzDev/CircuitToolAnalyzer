@@ -31,11 +31,18 @@ public class CircuitAnalysisController : ControllerBase
     [HttpPost]
     public IActionResult Analyze([FromBody] CircuitRequestDto dto)
     {
-        var circuit = _builder.Build(dto);
-        var result = _solver.Solve(circuit);
-        var savedId = _savedRepository.Save(dto, result);
+        try
+        {
+            var circuit = _builder.Build(dto);
+            var result = _solver.Solve(circuit);
+            var savedId = _savedRepository.Save(dto, result);
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpGet("{id}")]
