@@ -4,6 +4,12 @@ A web application for building electrical circuits, connecting components throug
 
 A portfolio project, under active development, built to demonstrate skills in C#, ASP.NET Core, and clean architecture. It grew out of a Python circuit-analysis script, being progressively rewritten as an independent C#/.NET application.
 
+## Screenshots
+
+| Inicio | Analizador |
+| :---: | :---: |
+| ![Home — landing](docs/screenshots/home.png) | ![Analizador — editor y resultados](docs/screenshots/analyser.png) |
+
 ## Current Status
 
 🚧 Work in progress. The end-to-end flow already works: send a circuit over HTTP → build it in the domain → solve it → return the calculated voltages.
@@ -12,13 +18,14 @@ A portfolio project, under active development, built to demonstrate skills in C#
 - Full domain model: electrical components (`Resistor`, `VoltageSource`, `CurrentSource`), topology (`Node`, `Connection`, `Circuit`)
 - Nodal analysis for circuits with **one unknown node** (nodes fixed by a voltage source are resolved separately)
 - REST API with one endpoint (`POST /api/CircuitAnalysis`) that receives a circuit as JSON and returns each node's voltage
+- Blazor frontend with a dark engineering-themed UI: circuit editor (nodes, resistors, voltage sources), validation and a results panel with per-node voltages
 - Unit tests with xUnit for the solver
 
 **Pending:**
 - Nodal analysis generalized to N unknown nodes (linear system solved with matrices)
 - Mesh analysis (KVL)
 - Persistence with Entity Framework Core + SQL Server
-- Frontend / visual Circuit Builder
+- Full drag-and-drop circuit canvas (a functional form-based editor already exists)
 - Integration tests
 
 ## Tech Stack
@@ -26,13 +33,13 @@ A portfolio project, under active development, built to demonstrate skills in C#
 **In use:**
 - C# / .NET
 - ASP.NET Core Web API
+- Blazor (Razor Components) — frontend
 - xUnit
 - Git / GitHub
 
 **Planned:**
 - Entity Framework Core
 - SQL Server
-- Frontend (TBD)
 
 ## Architecture
 
@@ -44,6 +51,7 @@ src/
   CircuitToolAnalyzer.Application     → use cases, solver, DTOs, building circuits from DTOs
   CircuitToolAnalyzer.Infrastructure  → persistence (not yet implemented)
   CircuitToolAnalyzer.Api             → controllers, ASP.NET Core configuration
+  CircuitToolAnalyzer.Web             → Blazor frontend (Razor Components), consumes the API
 
 tests/
   CircuitToolAnalyzer.UnitTests
