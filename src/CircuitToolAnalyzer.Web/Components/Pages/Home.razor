@@ -1,7 +1,97 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Circuit Tool Analyzer</PageTitle>
 
-<h1>Hello, world!</h1>
+<section class="hero">
+    <span class="badge badge-accent">Análisis nodal · Ley de corrientes de Kirchhoff</span>
+    <h1>Diseña un circuito y resuelve sus voltajes de nodo.</h1>
+    <p class="lead">
+        Define nodos y componentes (fuente de voltaje y resistencias), envíalos al solver
+        y obtén el voltaje de cada nodo aplicando KCL. Construido con C# / ASP.NET Core
+        y una interfaz Blazor.
+    </p>
 
-Welcome to your new app.
+    <div class="hero-actions">
+        <a class="btn btn-primary" href="analyser">
+            Abrir analizador
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </a>
+        <a class="btn btn-ghost" href="#como-funciona">Cómo funciona</a>
+    </div>
+
+    <div class="hero-diagram" aria-hidden="true">
+        <div class="node-chip n-src">
+            <span class="dot"></span>V0
+        </div>
+        <span class="wire">—</span>
+        <div class="comp-chip mono">R1 10Ω</div>
+        <span class="wire">—</span>
+        <div class="node-chip n-mid"><span class="dot"></span>V1</div>
+        <span class="wire">—</span>
+        <div class="comp-chip mono">R2 10Ω</div>
+        <span class="wire">—</span>
+        <div class="node-chip n-gnd"><span class="dot"></span>GND</div>
+    </div>
+</section>
+
+<section class="features">
+    <article class="card feature">
+        <div class="feature-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 7 4-14 3 7h4" /></svg>
+        </div>
+        <h3>Editor de circuitos</h3>
+        <p>Agrega y edita nodos y componentes. Marca la tierra, elige la fuente y conecta las resistencias.</p>
+    </article>
+
+    <article class="card feature">
+        <div class="feature-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /><circle cx="12" cy="12" r="4" /></svg>
+        </div>
+        <h3>Solver nodal (KCL)</h3>
+        <p>El motor calcula el voltaje del nodo desconocido a partir de las conductancias y las fuentes.</p>
+    </article>
+
+    <article class="card feature">
+        <div class="feature-icon">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10" /></svg>
+        </div>
+        <h3>Resultados por nodo</h3>
+        <p>Voltajes etiquetados por nodo, con el nodo resuelto resaltado y unidades formateadas.</p>
+    </article>
+</section>
+
+<section id="como-funciona" class="how">
+    <h2>Cómo funciona</h2>
+    <ol class="steps">
+        <li>
+            <span class="step-num mono">01</span>
+            <div>
+                <h4>Define la topología</h4>
+                <p>Un nodo de tierra, una fuente de voltaje y una red de resistencias alrededor del nodo a resolver.</p>
+            </div>
+        </li>
+        <li>
+            <span class="step-num mono">02</span>
+            <div>
+                <h4>Envía al solver</h4>
+                <p>La app construye el DTO, llama al API <code class="mono">POST /api/CircuitAnalysis</code> y valida la respuesta.</p>
+            </div>
+        </li>
+        <li>
+            <span class="step-num mono">03</span>
+            <div>
+                <h4>Lee los voltajes</h4>
+                <p>Se muestran los voltajes de cada nodo en una tabla, con el nodo incógnito destacado.</p>
+            </div>
+        </li>
+    </ol>
+
+    <p class="note">
+        <strong>Nota:</strong> el solver actual resuelve <strong>un único nodo desconocido</strong>;
+        el editor valida y avisa cuando la topología excede esa capacidad.
+    </p>
+</section>

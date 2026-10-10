@@ -1,68 +1,566 @@
-﻿@using CircuitToolAnalyzer.Application.DTOs
-@using System.Net.Http.Json
-@using CircuitToolAnalyzer.Web.Models
-@page "/analyser"
+﻿@page "/analyser"
 @rendermode InteractiveServer
+@using CircuitToolAnalyzer.Application.DTOs
+@using CircuitToolAnalyzer.Web.Models
+@using System.Net.Http.Json
 @inject IHttpClientFactory HttpClientFactory
 
-<h3>Analyser</h3>
+<div class="analyser">
+    <header class="page-head">
+        <div class="page-head-copy">
+            <span class="badge badge-accent">Analizador</span>
+            <h1>Analizador de circuitos</h1>
+            <p>Define nodos y componentes, y resuelve los voltajes de nodo con análisis nodal (KCL).</p>
+        </div>
+        <div class="page-head-actions">
+            <button class="btn btn-ghost" @onclick="LoadExample">Cargar ejemplo</button>
+            <button class="btn btn-primary" @onclick="RunAnalysis" disabled="@_isBusy">
+                @if (_isBusy)
+                {
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span>Resolviendo…</span>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    <span>Resolver</span>
+                }
+            </button>
+        </div>
+    </header>
+
+    <div class="circuit-name card">
+        <label for="circuit-name">Nombre del circuito</label>
+        <input id="circuit-name" type="text" @bind="_circuitName" placeholder="Ej.: Divisor de voltaje" />
+    </div>
+
+    @if (_error is not null)
+    {
+        <div class="banner banner-error" role="alert">
+            <span class="banner-icon">⚠</span>
+            <span>@_error</span>
+            <button class="btn btn-danger-ghost" @onclick="() => _error = null" aria-label="Cerrar">✕</button>
+        </div>
+    }
+
+    @if (_info is not null)
+    {
+        <div class="banner banner-info" role="status">
+            <span class="banner-icon">ℹ</span>
+            <span>@_info</span>
+            <button class="btn btn-danger-ghost" @onclick="() => _info = null" aria-label="Cerrar">✕</button>
+        </div>
+    }
+
+    <div class="analyser-grid">
+        <div class="editor">
+            <section class="card editor-card">
+                <div class="section-head">
+                    <h3>Nodos</h3>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost btn-sm" @onclick="AddNode">＋ Nodo</button>
+                        <button class="btn btn-ghost btn-sm" @onclick="AddGroundNode">＋ Tierra</button>
+                    </div>
+                </div>
+
+                @if (_nodes.Count == 0)
+                {
+                    <p class="empty-hint">Aún no hay nodos. Agrega al menos dos (uno será la tierra).</p>
+                }
+
+                @foreach (var node in _nodes)
+                {
+                    <div class="node-row" @key="node.Id">
+                        <input class="node-name mono" type="text" @bind="node.Name" placeholder="Nombre del nodo" />
+                        <button type="button"
+                                class="gnd-toggle @(node.IsGround ? "on" : null)"
+                                @onclick="() => SetGround(node)"
+                                title="Marcar como tierra (GND)">
+                            <span class="dot"></span>GND
+                        </button>
+                        <button type="button" class="btn btn-danger-ghost" title="Eliminar nodo" @onclick="() => RemoveNode(node)">✕</button>
+                    </div>
+                }
+            </section>
+
+            <section class="card editor-card">
+                <div class="section-head">
+                    <h3>Componentes</h3>
+                    <div class="section-actions">
+                        <button class="btn btn-ghost btn-sm" @onclick="() => AddComponent(ComponentType.Resistor)">＋ Resistencia</button>
+                        <button class="btn btn-ghost btn-sm" @onclick="() => AddComponent(ComponentType.VoltageSource)">＋ Fuente V</button>
+                    </div>
+                </div>
+
+                @if (_components.Count == 0)
+                {
+                    <p class="empty-hint">Agrega una fuente de voltaje conectada a tierra y resistencias hacia el nodo a resolver.</p>
+                }
+
+                @foreach (var c in _components)
+                {
+                    <div class="comp-row" @key="c.Id">
+                        <div class="comp-main">
+                            <input class="comp-name mono" type="text" @bind="c.Name" placeholder="Nombre" title="Nombre del componente" />
+                            <select aria-label="Tipo de componente" @bind="c.Type">
+                                <option value="@ComponentType.Resistor">Resistencia</option>
+                                <option value="@ComponentType.VoltageSource">Fuente V</option>
+                            </select>
+                            <input class="comp-value mono" type="number" step="any" min="0" @bind="c.Value" title="Valor" />
+                            <span class="unit mono">@UnitFor(c.Type)</span>
+                        </div>
+                        <div class="comp-ends">
+                            <select class="mono" aria-label="Terminal A" @bind="c.NodeAId">
+                                @foreach (var n in _nodes)
+                                {
+                                    <option value="@n.Id">@n.Name</option>
+                                }
+                            </select>
+                            <span class="conn-sep mono">⇄</span>
+                            <select class="mono" aria-label="Terminal B" @bind="c.NodeBId">
+                                @foreach (var n in _nodes)
+                                {
+                                    <option value="@n.Id">@n.Name</option>
+                                }
+                            </select>
+                            <button type="button" class="btn btn-danger-ghost" title="Eliminar componente" @onclick="() => RemoveComponent(c)">✕</button>
+                        </div>
+                    </div>
+                }
+
+                <p class="mini-note">Selecciona la tierra con el nodo marcado <strong>GND</strong>. La fuente de voltaje debe conectar a tierra; el nodo incógnito será el único no fijado por la fuente.</p>
+            </section>
+        </div>
+
+        <aside class="results card">
+            <div class="section-head">
+                <h3>Resultados</h3>
+                <span class="badge badge-accent mono">@(_lastResponse?.Type ?? "—")</span>
+            </div>
+
+            @if (_isBusy)
+            {
+                <div class="results-state">
+                    <span class="spinner spinner-lg" aria-hidden="true"></span>
+                    <p>Calculando voltajes de nodo…</p>
+                </div>
+            }
+            else if (_results.Count > 0 && _lastResponse is not null)
+            {
+                <table class="vtable">
+                    <thead>
+                        <tr>
+                            <th>Nodo</th>
+                            <th class="right">Voltaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _results)
+                        {
+                            <tr class="@(row.IsSolved ? "row-solved" : null)" title="ID @row.NodeId">
+                                <td>
+                                    <span class="node-label mono">@row.Label</span>
+                                    @if (row.IsSolved)
+                                    {
+                                        <span class="badge badge-success">resuelto</span>
+                                    }
+                                </td>
+                                <td class="right mono value">@row.Voltage.ToString("0.#####") V</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <p class="result-hint">
+                    <span>⚡</span>
+                    <span>El voltaje del nodo <strong>resuelto</strong> se calcula por KCL sobre las conductancias conectadas.</span>
+                </p>
+                <p class="result-hint dim">
+                    Las etiquetas de nodo se infieren en el cliente; el API responde con identificadores (GUID).
+                </p>
+            }
+            else
+            {
+                <div class="results-state empty">
+                    <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor"
+                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12h3M19 12h3" />
+                        <rect x="5" y="8" width="14" height="8" rx="1.5" />
+                        <path d="M9 8v8M15 8v8" />
+                    </svg>
+                    <p>Define el circuito y presiona <strong>Resolver</strong>.</p>
+                </div>
+            }
+        </aside>
+    </div>
+</div>
 
 @code {
-    double voltage = 0.0;
-    double r1 = 0.0;
-    double r2 = 0.0;
-    AnalysisResultResponse? result = null;
-
-    private async Task Works()
+    private sealed class NodeModel
     {
-        Console.WriteLine("2");
+        public Guid Id { get; } = Guid.NewGuid();
+        public string Name { get; set; } = "";
+        public bool IsGround { get; set; }
     }
 
-    private async Task CalculateCurrent()
+    private sealed class ComponentModel
     {
-        Console.WriteLine("Botón presionado");
-        var dto = new CircuitRequestDto
-        {
-            Name = "Circuito desde Web",
-            Nodes = new List<NodeDto>
-    {
-        new NodeDto { Name = "V0", IsGround = false },
-        new NodeDto { Name = "GND", IsGround = true },
-        new NodeDto { Name = "V1", IsGround = false }
-    },
-            Connections = new List<ConnectionDto>
-    {
-        new ConnectionDto { ComponentName = "Fuente1", ComponentType = ComponentType.VoltageSource, Value = voltage, NodeAName = "V0", NodeBName = "GND" },
-        new ConnectionDto { ComponentName = "R1", ComponentType = ComponentType.Resistor, Value = r1, NodeAName = "V0", NodeBName = "V1" },
+        public Guid Id { get; } = Guid.NewGuid();
+        public string Name { get; set; } = "";
+        public ComponentType Type { get; set; } = ComponentType.Resistor;
+        public double Value { get; set; }
+        public Guid NodeAId { get; set; }
+        public Guid NodeBId { get; set; }
     }
-        };
-        var client = HttpClientFactory.CreateClient("CircuitApi");
-        var response = await client.PostAsJsonAsync("api/CircuitAnalysis", dto);
 
-        if (!response.IsSuccessStatusCode)
+    private sealed class ResultRow
+    {
+        public string Label { get; set; } = "";
+        public double Voltage { get; set; }
+        public bool IsSolved { get; set; }
+        public Guid NodeId { get; set; }
+    }
+
+    private readonly List<NodeModel> _nodes = new();
+    private readonly List<ComponentModel> _components = new();
+    private readonly List<ResultRow> _results = new();
+
+    private string _circuitName = "Mi circuito";
+    private string? _error;
+    private string? _info;
+    private bool _isBusy;
+    private AnalysisResultResponse? _lastResponse;
+
+    protected override void OnInitialized() => LoadExample();
+
+    // ---------- edit operations ----------
+
+    private void LoadExample()
+    {
+        _circuitName = "Divisor de voltaje";
+        _nodes.Clear();
+        _components.Clear();
+        _results.Clear();
+        _lastResponse = null;
+        _error = null;
+        _info = null;
+
+        var v0 = new NodeModel { Name = "V0" };
+        var gnd = new NodeModel { Name = "GND", IsGround = true };
+        var v1 = new NodeModel { Name = "V1" };
+        _nodes.Add(v0);
+        _nodes.Add(gnd);
+        _nodes.Add(v1);
+
+        _components.Add(new ComponentModel { Name = "E1", Type = ComponentType.VoltageSource, Value = 20, NodeAId = v0.Id, NodeBId = gnd.Id });
+        _components.Add(new ComponentModel { Name = "R1", Type = ComponentType.Resistor, Value = 10, NodeAId = v0.Id, NodeBId = v1.Id });
+        _components.Add(new ComponentModel { Name = "R2", Type = ComponentType.Resistor, Value = 10, NodeAId = v1.Id, NodeBId = gnd.Id });
+    }
+
+    private void AddNode()
+    {
+        var name = "V" + _nodes.Count(n => !n.IsGround);
+        while (_nodes.Any(n => n.Name == name))
         {
-            Console.WriteLine($"Error: {response.StatusCode}");
+            name += "_";
+        }
+        _nodes.Add(new NodeModel { Name = name });
+        ResetOutputs();
+    }
+
+    private void AddGroundNode()
+    {
+        var existing = _nodes.FirstOrDefault(n => n.Name == "GND");
+        if (existing is not null)
+        {
+            SetGround(existing);
+            return;
+        }
+        _nodes.Add(new NodeModel { Name = "GND", IsGround = true });
+        ResetOutputs();
+    }
+
+    private void SetGround(NodeModel node)
+    {
+        foreach (var n in _nodes)
+        {
+            n.IsGround = false;
+        }
+        node.IsGround = true;
+        ResetOutputs();
+    }
+
+    private void AddComponent(ComponentType type)
+    {
+        var a = _nodes.FirstOrDefault();
+        var b = _nodes.Count > 1 ? _nodes[1] : null;
+        if (a is null || b is null)
+        {
+            _error = "Agrega al menos dos nodos antes de insertar un componente.";
             return;
         }
 
-        result = await response.Content.ReadFromJsonAsync<AnalysisResultResponse>();
-        StateHasChanged();
-    }
-}
-
-<input type="number" @bind="voltage" placeholder="Voltage (V)" />
-<input type="number" @bind="r1" placeholder="Resistance R1 (Ω)" />
-<input type="number" @bind="r2" placeholder="Resistance R2 (Ω)" />
-
-<button @onclick="CalculateCurrent">Calculate Current</button>
-
-@if (result != null)
-{
-    <div>
-        <h4>Results:</h4>
-        @foreach (var voltaje in result.NodeVoltages)
+        var prefix = type == ComponentType.Resistor ? "R" : "E";
+        var index = 1;
+        string name;
+        do
         {
-            <p>Nodo @voltaje.Key: @voltaje.Value V</p>
+            name = prefix + index;
+            index++;
+        } while (_components.Any(c => c.Name == name));
+
+        _components.Add(new ComponentModel
+        {
+            Name = name,
+            Type = type,
+            Value = type == ComponentType.Resistor ? 10 : 12,
+            NodeAId = a.Id,
+            NodeBId = b.Id
+        });
+        ResetOutputs();
+    }
+
+    private void RemoveNode(NodeModel node)
+    {
+        _nodes.Remove(node);
+        _components.RemoveAll(c => c.NodeAId == node.Id || c.NodeBId == node.Id);
+        ResetOutputs();
+    }
+
+    private void RemoveComponent(ComponentModel c)
+    {
+        _components.Remove(c);
+        ResetOutputs();
+    }
+
+    private void ResetOutputs()
+    {
+        _results.Clear();
+        _lastResponse = null;
+        _error = null;
+        _info = null;
+    }
+
+    // ---------- analysis ----------
+
+    private async Task RunAnalysis()
+    {
+        _error = null;
+        _info = null;
+
+        var problems = Validate();
+        if (problems.Count > 0)
+        {
+            _error = string.Join(" ", problems);
+            return;
         }
-    </div>
+
+        _results.Clear();
+        _isBusy = true;
+        try
+        {
+            var dto = BuildDto();
+            var client = HttpClientFactory.CreateClient("CircuitApi");
+            var response = await client.PostAsJsonAsync("api/CircuitAnalysis", dto);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _error = string.IsNullOrWhiteSpace(body)
+                    ? $"El servidor respondió con estado {(int)response.StatusCode}."
+                    : body;
+                return;
+            }
+
+            var raw = await response.Content.ReadFromJsonAsync<AnalysisResultResponse>();
+            if (raw is null)
+            {
+                _error = "El servidor devolvió una respuesta vacía.";
+                return;
+            }
+
+            _lastResponse = raw;
+            MapResults(raw.NodeVoltages);
+        }
+        catch (Exception ex)
+        {
+            _error = $"No se pudo resolver el circuito: {ex.Message}";
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private CircuitRequestDto BuildDto() => new()
+    {
+        Name = _circuitName,
+        Nodes = _nodes.Select(n => new NodeDto { Name = n.Name, IsGround = n.IsGround }).ToList(),
+        Connections = _components.Select(c => new ConnectionDto
+        {
+            ComponentName = c.Name,
+            ComponentType = c.Type,
+            Value = c.Value,
+            NodeAName = NameOf(c.NodeAId),
+            NodeBName = NameOf(c.NodeBId)
+        }).ToList()
+    };
+
+    private List<string> Validate()
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(_circuitName))
+        {
+            errors.Add("El nombre del circuito no puede estar vacío.");
+        }
+
+        if (_nodes.Count < 2)
+        {
+            errors.Add("Agrega al menos dos nodos (uno será la tierra).");
+        }
+
+        var grounds = _nodes.Where(n => n.IsGround).ToList();
+        if (grounds.Count != 1)
+        {
+            errors.Add("Debe existir exactamente un nodo de tierra (GND).");
+        }
+
+        if (_components.Count == 0)
+        {
+            errors.Add("Agrega al menos un componente.");
+        }
+
+        foreach (var c in _components)
+        {
+            if (string.IsNullOrWhiteSpace(c.Name))
+            {
+                errors.Add("Todos los componentes necesitan un nombre.");
+            }
+
+            if (!_nodes.Any(n => n.Id == c.NodeAId) || !_nodes.Any(n => n.Id == c.NodeBId))
+            {
+                errors.Add($"El componente '{c.Name}' referencia un nodo que ya no existe. Reasígnalo o elimínalo.");
+                return errors;
+            }
+
+            if (c.NodeAId == c.NodeBId)
+            {
+                errors.Add($"El componente '{c.Name}' conecta un nodo consigo mismo.");
+            }
+
+            if (c.Type == ComponentType.Resistor && c.Value <= 0)
+            {
+                errors.Add($"El resistor '{c.Name}' debe tener un valor mayor a 0 Ω.");
+            }
+
+            if (c.Type == ComponentType.VoltageSource && c.Value == 0)
+            {
+                errors.Add($"La fuente '{c.Name}' no puede tener 0 V.");
+            }
+        }
+
+        var ground = grounds.Count == 1 ? grounds[0] : null;
+        var sources = _components.Where(c => c.Type == ComponentType.VoltageSource).ToList();
+
+        if (sources.Count > 1)
+        {
+            errors.Add("El solver actual soporta una única fuente de voltaje.");
+        }
+
+        if (sources.Count == 1 && ground is not null)
+        {
+            var src = sources[0];
+            if (src.NodeAId != ground.Id && src.NodeBId != ground.Id)
+            {
+                errors.Add("La fuente de voltaje debe conectar al nodo de tierra (GND).");
+            }
+        }
+
+        var srcNode = sources.Count == 1 && ground is not null
+            ? _nodes.FirstOrDefault(n => sources[0].NodeAId == ground.Id ? n.Id == sources[0].NodeBId : n.Id == sources[0].NodeAId)
+            : null;
+
+        var unknownNodes = _nodes.Where(n => n.Id != ground?.Id && n.Id != srcNode?.Id).ToList();
+        if (unknownNodes.Count != 1)
+        {
+            errors.Add($"El solver actual resuelve exactamente un nodo desconocido; esta topología tiene {unknownNodes.Count}.");
+            return errors;
+        }
+
+        var unknown = unknownNodes[0];
+        var resistorsOnUnknown = _components.Count(c =>
+            c.Type == ComponentType.Resistor && (c.NodeAId == unknown.Id || c.NodeBId == unknown.Id));
+
+        if (resistorsOnUnknown == 0)
+        {
+            errors.Add("Agrega al menos un resistor conectado al nodo a resolver.");
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// El API devuelve los voltajes con las claves GUID generadas en el servidor y sin nombres de nodo.
+    /// El solver inserta en el diccionario en un orden determinista: tierra → nodo fijado por la fuente → nodo incógnito,
+    /// así que las etiquetas se reconstruyen en el cliente alineando ese mismo orden.
+    /// </summary>
+    private void MapResults(IReadOnlyDictionary<Guid, double> nodeVoltages)
+    {
+        var (ground, srcNode, unknown) = ResolveTopology();
+        var ordered = new List<(string Label, bool Solved)>();
+        if (ground is not null) ordered.Add((ground.Name, false));
+        if (srcNode is not null) ordered.Add((srcNode.Name, false));
+        if (unknown is not null) ordered.Add((unknown.Name, true));
+
+        var entries = nodeVoltages.ToList();
+
+        if (entries.Count == ordered.Count)
+        {
+            for (var i = 0; i < entries.Count; i++)
+            {
+                _results.Add(new ResultRow
+                {
+                    Label = ordered[i].Label,
+                    Voltage = entries[i].Value,
+                    IsSolved = ordered[i].Solved,
+                    NodeId = entries[i].Key
+                });
+            }
+        }
+        else
+        {
+            foreach (var kv in entries)
+            {
+                _results.Add(new ResultRow
+                {
+                    Label = kv.Key.ToString("N")[..8].ToUpperInvariant(),
+                    Voltage = kv.Value,
+                    NodeId = kv.Key
+                });
+            }
+            _info = "El recuento de nodos no coincide con la topología esperada; se muestran los identificadores devueltos por el API.";
+        }
+    }
+
+    private (NodeModel? Ground, NodeModel? SrcNode, NodeModel? Unknown) ResolveTopology()
+    {
+        var ground = _nodes.FirstOrDefault(n => n.IsGround);
+        var source = _components.FirstOrDefault(c => c.Type == ComponentType.VoltageSource);
+        NodeModel? srcNode = null;
+        if (ground is not null && source is not null)
+        {
+            srcNode = source.NodeAId == ground.Id
+                ? _nodes.FirstOrDefault(n => n.Id == source.NodeBId)
+                : _nodes.FirstOrDefault(n => n.Id == source.NodeAId);
+        }
+
+        var unknown = _nodes.FirstOrDefault(n => n.Id != ground?.Id && n.Id != srcNode?.Id);
+        return (ground, srcNode, unknown);
+    }
+
+    private string NameOf(Guid id) => _nodes.FirstOrDefault(n => n.Id == id)?.Name ?? "";
+
+    private static string UnitFor(ComponentType type) => type == ComponentType.Resistor ? "Ω" : "V";
 }

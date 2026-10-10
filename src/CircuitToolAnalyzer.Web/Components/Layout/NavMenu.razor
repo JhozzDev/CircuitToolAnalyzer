@@ -1,35 +1,21 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">CircuitToolAnalyzer.Web</a>
-    </div>
-</div>
+﻿<div class="bar-inner">
+    <a class="brand" href="" aria-label="Circuit Tool Analyzer — inicio">
+        <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h3" />
+                <path d="M19 12h3" />
+                <rect x="5" y="9" width="14" height="6" rx="1.2" />
+                <path d="M9 9v6M15 9v6" />
+            </svg>
+        </span>
+        <span class="brand-text">Circuit<strong>Tool</strong>Analyzer</span>
+    </a>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="analyser">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Analyser
-            </NavLink>
-        </div>
+    <nav class="bar-nav" aria-label="Principal">
+        <NavLink class="bar-link" href="" Match="NavLinkMatch.All">Inicio</NavLink>
+        <NavLink class="bar-link" href="analyser">Analizador</NavLink>
     </nav>
-</div>
 
+    <span class="bar-tag mono">Nodal · KCL</span>
+</div>
